@@ -84,7 +84,7 @@ public class TunaAbundanceInitializerFactory implements AlgorithmFactory<TunaAbu
         return cache.getUnchecked(entry(this.speciesCodesFilePath, this.binsFilePath));
     }
 
-    private Map<String, List<Bin>> binsPerSpecies(final Path binsFilePath) {
+    private static Map<String, List<Bin>> binsPerSpecies(final Path binsFilePath) {
         return parseAllRecords(binsFilePath).stream()
             .collect(groupingBy(
                 record -> record.getString("species_code")

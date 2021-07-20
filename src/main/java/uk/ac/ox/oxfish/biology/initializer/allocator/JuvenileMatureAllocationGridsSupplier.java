@@ -29,10 +29,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import uk.ac.ox.oxfish.biology.SpeciesCodes;
-import uk.ac.ox.oxfish.biology.initializer.allocator.JuvenileMatureAllocationGridsFactory.AgeGroup;
+import uk.ac.ox.oxfish.biology.initializer.allocator.JuvenileMatureAllocationGridsSupplier.AgeGroup;
+import uk.ac.ox.oxfish.geography.MapExtent;
 
-class JuvenileMatureAllocationGridsFactory
-    extends AbstractAllocationGridsFactory<Entry<String, AgeGroup>> {
+class JuvenileMatureAllocationGridsSupplier
+    extends AbstractAllocationGridsSupplier<Entry<String, AgeGroup>> {
 
     private static final Map<String, AgeGroup> groups = Arrays
         .stream(AgeGroup.values())
@@ -41,11 +42,12 @@ class JuvenileMatureAllocationGridsFactory
             identity()
         ));
 
-    JuvenileMatureAllocationGridsFactory(
+    public JuvenileMatureAllocationGridsSupplier(
         final Path speciesCodesFilePath,
-        final Path gridsFilePath
+        final Path gridsFilePath,
+        final MapExtent mapExtent
     ) {
-        super(speciesCodesFilePath, gridsFilePath);
+        super(speciesCodesFilePath, gridsFilePath, mapExtent);
     }
 
     @Override

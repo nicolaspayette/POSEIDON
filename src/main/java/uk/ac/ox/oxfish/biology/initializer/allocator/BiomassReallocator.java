@@ -44,7 +44,7 @@ import uk.ac.ox.oxfish.model.FishState;
  * those should never be mutated, so the class is safe to share between parallel simulations. Note
  * that the {@code reallocate} method mutates the tiles biomass arrays directly.
  */
-public class BiomassReallocator extends Reallocator {
+public class BiomassReallocator extends Reallocator<String> {
 
     /**
      * Constructs a new BiomassReallocator.

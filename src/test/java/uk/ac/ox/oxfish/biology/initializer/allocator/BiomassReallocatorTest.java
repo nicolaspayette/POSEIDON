@@ -53,7 +53,7 @@ public class BiomassReallocatorTest extends TestCase {
                 new double[][] {{0, 0, 0}, {0, 0, 0}, {1, 1, 1}}
             )
             .map(DoubleGrid2D::new)
-            .map(BiomassReallocatorFactory::normalize)
+            .map(AllocationGridsSupplier::normalize)
             .collect(toImmutableList());
 
         final GlobalBiology globalBiology = genericListOfSpecies(2);

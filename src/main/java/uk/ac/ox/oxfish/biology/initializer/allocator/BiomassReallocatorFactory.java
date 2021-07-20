@@ -18,74 +18,31 @@
 
 package uk.ac.ox.oxfish.biology.initializer.allocator;
 
-import static uk.ac.ox.oxfish.model.scenario.TunaScenario.input;
-
 import java.nio.file.Path;
-import java.util.Objects;
+import uk.ac.ox.oxfish.geography.MapExtent;
 import uk.ac.ox.oxfish.model.FishState;
-import uk.ac.ox.oxfish.utility.AlgorithmFactory;
 
-public class BiomassReallocatorFactory implements AlgorithmFactory<BiomassReallocator> {
+public class BiomassReallocatorFactory extends ReallocatorFactory<BiomassReallocator> {
 
-    private Path speciesCodesFilePath = input("species_codes.csv");
-    private Path biomassDistributionsFilePath = input("biomass_distributions.csv");
-    private int period = 365;
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(speciesCodesFilePath, biomassDistributionsFilePath, period);
+    public BiomassReallocatorFactory() {
     }
 
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        final BiomassReallocatorFactory that = (BiomassReallocatorFactory) o;
-        return period == that.period && Objects.equals(
-            speciesCodesFilePath,
-            that.speciesCodesFilePath
-        ) && Objects.equals(biomassDistributionsFilePath, that.biomassDistributionsFilePath);
-    }
-
-    @SuppressWarnings("unused")
-    public Path getSpeciesCodesFilePath() {
-        return speciesCodesFilePath;
-    }
-
-    @SuppressWarnings("unused")
-    public void setSpeciesCodesFilePath(final Path speciesCodesFilePath) {
-        this.speciesCodesFilePath = speciesCodesFilePath;
-    }
-
-    @SuppressWarnings("unused")
-    public Path getBiomassDistributionsFilePath() {
-        return biomassDistributionsFilePath;
-    }
-
-    @SuppressWarnings("unused")
-    public void setBiomassDistributionsFilePath(final Path biomassDistributionsFilePath) {
-        this.biomassDistributionsFilePath = biomassDistributionsFilePath;
+    public BiomassReallocatorFactory(
+        final Path speciesCodesFilePath,
+        final Path biomassDistributionsFilePath,
+        final int period
+    ) {
+        super(speciesCodesFilePath, biomassDistributionsFilePath, period);
     }
 
     @Override
     public BiomassReallocator apply(final FishState fishState) {
         final AllocationGrids<String> grids =
-            new AllocationGridsFactory(
-                speciesCodesFilePath,
-                biomassDistributionsFilePath
-            ).apply(fishState);
-        return new BiomassReallocator(grids, period);
-    }
-
-    public int getPeriod() {
-        return period;
-    }
-
-    public void setPeriod(final int period) {
-        this.period = period;
+            new AllocationGridsSupplier(
+                getSpeciesCodesFilePath(),
+                getBiomassDistributionsFilePath(),
+                new MapExtent(fishState.getMap())
+            ).get();
+        return new BiomassReallocator(grids, getPeriod());
     }
 }

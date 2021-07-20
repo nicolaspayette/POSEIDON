@@ -32,9 +32,9 @@ import uk.ac.ox.oxfish.model.FishState;
 /**
  *
  */
-public abstract class Reallocator implements Steppable, AdditionalStartable {
+public abstract class Reallocator<K> implements Steppable, AdditionalStartable {
 
-    private final AllocationGrids<String> allocationGrids;
+    private final AllocationGrids<K> allocationGrids;
     private final int period;
 
     /**
@@ -44,14 +44,14 @@ public abstract class Reallocator implements Steppable, AdditionalStartable {
      * @param period          The number to use as modulo for looping the schedule (normally 365)
      */
     Reallocator(
-        final AllocationGrids<String> allocationGrids,
+        final AllocationGrids<K> allocationGrids,
         final int period
     ) {
         this.allocationGrids = allocationGrids;
         this.period = period;
     }
 
-    AllocationGrids<String> getAllocationGrids() {
+    AllocationGrids<K> getAllocationGrids() {
         return allocationGrids;
     }
 
@@ -78,7 +78,7 @@ public abstract class Reallocator implements Steppable, AdditionalStartable {
     abstract void performReallocation(
         final GlobalBiology globalBiology,
         final NauticalMap nauticalMap,
-        final Map<String, ? extends DoubleGrid2D> grids
+        final Map<K, ? extends DoubleGrid2D> grids
     );
 
     public void reallocate(

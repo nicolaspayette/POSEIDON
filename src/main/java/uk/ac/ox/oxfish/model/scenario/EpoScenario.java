@@ -30,6 +30,7 @@ import java.util.Map;
 import uk.ac.ox.oxfish.biology.GlobalBiology;
 import uk.ac.ox.oxfish.biology.initializer.BiologyInitializer;
 import uk.ac.ox.oxfish.biology.initializer.TunaAbundanceInitializerFactory;
+import uk.ac.ox.oxfish.biology.initializer.allocator.AbundanceReallocatorFactory;
 import uk.ac.ox.oxfish.fisher.Fisher;
 import uk.ac.ox.oxfish.geography.NauticalMap;
 import uk.ac.ox.oxfish.geography.mapmakers.FromFileMapInitializerFactory;
@@ -47,12 +48,23 @@ public class EpoScenario implements Scenario {
 
     private static final Path INPUT_PATH = Paths.get("inputs", "epo");
 
+    private AbundanceReallocatorFactory reallocatorFactory =
+        new AbundanceReallocatorFactory(
+            INPUT_PATH.resolve("species_codes.csv"),
+            INPUT_PATH.resolve("grids.csv"),
+            365,
+            ImmutableMap.of(
+                "Skipjack tuna", 14,
+                "Bigeye tuna", 8,
+                "Yellowfin tuna", 9
+            )
+        );
+
     private AlgorithmFactory<? extends BiologyInitializer> biologyInitializerFactory =
         new TunaAbundanceInitializerFactory(
             INPUT_PATH.resolve("species_codes.csv"),
             INPUT_PATH.resolve("bins.csv")
         );
-
     private AlgorithmFactory<? extends MapInitializer> mapInitializerFactory =
         new FromFileMapInitializerFactory(
             INPUT_PATH.resolve("depth.csv"),
@@ -73,13 +85,24 @@ public class EpoScenario implements Scenario {
     }
 
     @SuppressWarnings("unused")
+    public AbundanceReallocatorFactory getReallocatorFactory() {
+        return reallocatorFactory;
+    }
+
+    @SuppressWarnings("unused")
+    public void setReallocatorFactory(final AbundanceReallocatorFactory reallocatorFactory) {
+        this.reallocatorFactory = reallocatorFactory;
+    }
+
+    @SuppressWarnings("unused")
     public AlgorithmFactory<? extends BiologyInitializer> getBiologyInitializerFactory() {
         return biologyInitializerFactory;
     }
 
     @SuppressWarnings("unused")
     public void setBiologyInitializerFactory(
-        final AlgorithmFactory<? extends BiologyInitializer> biologyInitializerFactory) {
+        final AlgorithmFactory<? extends BiologyInitializer> biologyInitializerFactory
+    ) {
         this.biologyInitializerFactory = biologyInitializerFactory;
     }
 
@@ -137,7 +160,8 @@ public class EpoScenario implements Scenario {
 
     @SuppressWarnings("unused")
     public void setMapInitializerFactory(
-        final AlgorithmFactory<? extends MapInitializer> mapInitializerFactory) {
+        final AlgorithmFactory<? extends MapInitializer> mapInitializerFactory
+    ) {
         this.mapInitializerFactory = mapInitializerFactory;
     }
 }

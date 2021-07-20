@@ -27,6 +27,7 @@ import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.groupingBy;
 import static uk.ac.ox.oxfish.utility.csv.CsvParserUtil.parseAllRecords;
 
+import com.google.common.base.Supplier;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -41,25 +42,25 @@ import sim.field.grid.DoubleGrid2D;
 import uk.ac.ox.oxfish.biology.SpeciesCodes;
 import uk.ac.ox.oxfish.biology.SpeciesCodesFromFileFactory;
 import uk.ac.ox.oxfish.geography.MapExtent;
-import uk.ac.ox.oxfish.model.FishState;
-import uk.ac.ox.oxfish.utility.AlgorithmFactory;
 
-public abstract class AbstractAllocationGridsFactory<K>
-    implements AlgorithmFactory<AllocationGrids<K>> {
+abstract class AbstractAllocationGridsSupplier<K>
+    implements Supplier<AllocationGrids<K>> {
 
-    private Path speciesCodesFilePath;
-    private Path gridsFilePath;
-    private MapExtent mapExtent;
+    private final Path speciesCodesFilePath;
+    private final Path gridsFilePath;
+    private final MapExtent mapExtent;
 
-    private final LoadingCache<AbstractAllocationGridsFactory<K>, AllocationGrids<K>> cache =
+    private final LoadingCache<AbstractAllocationGridsSupplier<K>, AllocationGrids<K>> cache =
         CacheBuilder.newBuilder().build(CacheLoader.from(__ -> readGridsFromFile()));
 
-    AbstractAllocationGridsFactory(
+    AbstractAllocationGridsSupplier(
         final Path speciesCodesFilePath,
-        final Path gridsFilePath
+        final Path gridsFilePath,
+        final MapExtent mapExtent
     ) {
         this.speciesCodesFilePath = speciesCodesFilePath;
         this.gridsFilePath = gridsFilePath;
+        this.mapExtent = mapExtent;
     }
 
     @Override
@@ -75,35 +76,14 @@ public abstract class AbstractAllocationGridsFactory<K>
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final AbstractAllocationGridsFactory<?> that = (AbstractAllocationGridsFactory<?>) o;
+        final AbstractAllocationGridsSupplier<?> that = (AbstractAllocationGridsSupplier<?>) o;
         return Objects.equals(speciesCodesFilePath, that.speciesCodesFilePath)
             && Objects.equals(gridsFilePath, that.gridsFilePath)
             && Objects.equals(mapExtent, that.mapExtent);
     }
 
-    @SuppressWarnings("unused")
-    public Path getSpeciesCodesFilePath() {
-        return speciesCodesFilePath;
-    }
-
-    @SuppressWarnings("unused")
-    public void setSpeciesCodesFilePath(final Path speciesCodesFilePath) {
-        this.speciesCodesFilePath = speciesCodesFilePath;
-    }
-
-    @SuppressWarnings("unused")
-    public Path getGridsFilePath() {
-        return gridsFilePath;
-    }
-
-    @SuppressWarnings("unused")
-    public void setGridsFilePath(final Path gridsFilePath) {
-        this.gridsFilePath = gridsFilePath;
-    }
-
     @Override
-    public AllocationGrids<K> apply(final FishState fishState) {
-        this.mapExtent = new MapExtent(fishState.getMap());
+    public AllocationGrids<K> get() {
         return cache.getUnchecked(this);
     }
 
@@ -114,7 +94,7 @@ public abstract class AbstractAllocationGridsFactory<K>
         checkNotNull(this.mapExtent);
 
         final SpeciesCodes speciesCodes =
-            new SpeciesCodesFromFileFactory(getSpeciesCodesFilePath()).get();
+            new SpeciesCodesFromFileFactory(speciesCodesFilePath).get();
 
         final Map<LocalDate, Map<K, List<Record>>> recordsByDateAndKey =
             parseAllRecords(gridsFilePath).stream()
@@ -171,7 +151,7 @@ public abstract class AbstractAllocationGridsFactory<K>
     /**
      * Returns a copy of {@code grid} where the values sum up to 1.0
      */
-    private static DoubleGrid2D normalize(final DoubleGrid2D grid) {
+    static DoubleGrid2D normalize(final DoubleGrid2D grid) {
         final double sum = Arrays.stream(grid.field).flatMapToDouble(Arrays::stream).sum();
         return new DoubleGrid2D(grid).multiply(1 / sum);
     }

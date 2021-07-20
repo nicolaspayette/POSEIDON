@@ -21,14 +21,16 @@ package uk.ac.ox.oxfish.biology.initializer.allocator;
 import com.univocity.parsers.common.record.Record;
 import java.nio.file.Path;
 import uk.ac.ox.oxfish.biology.SpeciesCodes;
+import uk.ac.ox.oxfish.geography.MapExtent;
 
-public class AllocationGridsFactory extends AbstractAllocationGridsFactory<String> {
+class AllocationGridsSupplier extends AbstractAllocationGridsSupplier<String> {
 
-    AllocationGridsFactory(
+    AllocationGridsSupplier(
         final Path speciesCodesFilePath,
-        final Path gridsFilePath
+        final Path gridsFilePath,
+        final MapExtent mapExtent
     ) {
-        super(speciesCodesFilePath, gridsFilePath);
+        super(speciesCodesFilePath, gridsFilePath, mapExtent);
     }
 
     @Override

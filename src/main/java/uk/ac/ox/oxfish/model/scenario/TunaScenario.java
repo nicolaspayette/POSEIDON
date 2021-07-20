@@ -51,7 +51,6 @@ import uk.ac.ox.oxfish.fisher.selfanalysis.profit.HourlyCost;
 import uk.ac.ox.oxfish.fisher.strategies.departing.CompositeDepartingStrategy;
 import uk.ac.ox.oxfish.fisher.strategies.departing.DepartingStrategy;
 import uk.ac.ox.oxfish.fisher.strategies.departing.FixedRestTimeDepartingStrategy;
-import uk.ac.ox.oxfish.fisher.strategies.gear.GearStrategy;
 import uk.ac.ox.oxfish.geography.MapExtent;
 import uk.ac.ox.oxfish.geography.NauticalMap;
 import uk.ac.ox.oxfish.geography.NauticalMapFactory;
@@ -172,7 +171,11 @@ public class TunaScenario implements Scenario {
 
     private BiomassReallocatorInitializerFactory biomassReallocatorInitializerFactory = new BiomassReallocatorInitializerFactory();
     private BiomassRestorerFactory biomassRestorerFactory = new BiomassRestorerFactory();
-    private BiomassReallocatorFactory biomassReallocatorFactory = new BiomassReallocatorFactory();
+    private BiomassReallocatorFactory biomassReallocatorFactory = new BiomassReallocatorFactory(
+        input("species_codes.csv"),
+        input("biomass_distributions.csv"),
+        365
+    );
     private FadMapFactory fadMapFactory = new FadMapFactory();
 
     public TunaScenario() {
