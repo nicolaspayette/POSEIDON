@@ -50,6 +50,7 @@ public abstract class AbstractAllocationGridsFactory<K>
     private Path speciesCodesFilePath;
     private Path gridsFilePath;
     private MapExtent mapExtent;
+
     private final LoadingCache<AbstractAllocationGridsFactory<K>, AllocationGrids<K>> cache =
         CacheBuilder.newBuilder().build(CacheLoader.from(__ -> readGridsFromFile()));
 

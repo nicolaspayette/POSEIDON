@@ -371,8 +371,6 @@ public class TunaScenario implements Scenario {
         final NauticalMap nauticalMap = mapInitializer.apply(model).makeMap(model.random, null, model);
         final MapExtent mapExtent = new MapExtent(nauticalMap);
 
-        biomassReallocatorFactory.setMapExtent(mapExtent);
-        biomassReallocatorFactory.setSpeciesCodes(speciesCodesSupplier.get());
         plugins.add(biomassReallocatorFactory);
 
         biomassRestorerFactory.setBiomassReallocatorFactory(biomassReallocatorFactory);
