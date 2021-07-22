@@ -34,8 +34,8 @@ import uk.ac.ox.oxfish.model.FishState;
  */
 public abstract class Reallocator<K> implements Steppable, AdditionalStartable {
 
-    private final AllocationGrids<K> allocationGrids;
-    private final int period;
+    final AllocationGrids<K> allocationGrids;
+    final int period;
 
     /**
      * Constructs a new BiomassReallocator.

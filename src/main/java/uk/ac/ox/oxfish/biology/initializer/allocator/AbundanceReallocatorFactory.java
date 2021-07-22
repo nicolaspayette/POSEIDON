@@ -18,23 +18,32 @@
 
 package uk.ac.ox.oxfish.biology.initializer.allocator;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
-import static uk.ac.ox.oxfish.biology.initializer.allocator.JuvenileMatureAllocationGridsSupplier.AgeGroup.JUVENILE;
-import static uk.ac.ox.oxfish.biology.initializer.allocator.JuvenileMatureAllocationGridsSupplier.AgeGroup.MATURE;
+import static uk.ac.ox.oxfish.biology.initializer.allocator.SmallLargeAllocationGridsSupplier.SizeGroup.LARGE;
+import static uk.ac.ox.oxfish.biology.initializer.allocator.SmallLargeAllocationGridsSupplier.SizeGroup.SMALL;
 
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.IntFunction;
-import uk.ac.ox.oxfish.biology.initializer.allocator.JuvenileMatureAllocationGridsSupplier.AgeGroup;
+import uk.ac.ox.oxfish.biology.initializer.allocator.SmallLargeAllocationGridsSupplier.SizeGroup;
 import uk.ac.ox.oxfish.geography.MapExtent;
 import uk.ac.ox.oxfish.model.FishState;
+import uk.ac.ox.oxfish.utility.AlgorithmFactory;
 
-public class AbundanceReallocatorFactory extends ReallocatorFactory<AbundanceReallocator> {
+public class AbundanceReallocatorFactory
+    extends ReallocatorFactory
+    implements AlgorithmFactory<AbundanceReallocator> {
 
-    private Map<String, Integer> firstAdultBinPerSpecies;
+    private Map<String, Integer> firstLargeBinPerSpecies;
+    private MapExtent mapExtent;
 
+    /**
+     * Empty constructor to allow YAML instantiation.
+     */
+    @SuppressWarnings("unused")
     public AbundanceReallocatorFactory() {
     }
 
@@ -42,25 +51,34 @@ public class AbundanceReallocatorFactory extends ReallocatorFactory<AbundanceRea
         final Path speciesCodesFilePath,
         final Path biomassDistributionsFilePath,
         final int period,
-        final Map<String, Integer> firstMatureBinPerSpecies
+        final Map<String, Integer> firstLargeBinPerSpecies
     ) {
         super(speciesCodesFilePath, biomassDistributionsFilePath, period);
-        this.firstAdultBinPerSpecies = ImmutableMap.copyOf(firstMatureBinPerSpecies);
+        this.firstLargeBinPerSpecies = ImmutableMap.copyOf(firstLargeBinPerSpecies);
+    }
+
+    public MapExtent getMapExtent() {
+        return mapExtent;
+    }
+
+    public void setMapExtent(final MapExtent mapExtent) {
+        this.mapExtent = mapExtent;
     }
 
     @Override
     public AbundanceReallocator apply(final FishState fishState) {
-        final AllocationGrids<Entry<String, AgeGroup>> grids =
-            new JuvenileMatureAllocationGridsSupplier(
+        checkNotNull(mapExtent, "Need to call setMapExtent() before using");
+        final AllocationGrids<Entry<String, SizeGroup>> grids =
+            new SmallLargeAllocationGridsSupplier(
                 getSpeciesCodesFilePath(),
                 getBiomassDistributionsFilePath(),
-                new MapExtent(fishState.getMap())
+                this.mapExtent
             ).get();
-        final Map<String, IntFunction<AgeGroup>> binToAgeGroupMappings =
-            firstAdultBinPerSpecies.entrySet().stream().collect(toImmutableMap(
+        final Map<String, IntFunction<SizeGroup>> binToSizeGroupMappings =
+            firstLargeBinPerSpecies.entrySet().stream().collect(toImmutableMap(
                 Entry::getKey,
-                entry -> bin -> bin >= entry.getValue() ? MATURE : JUVENILE
+                entry -> bin -> bin >= entry.getValue() ? LARGE : SMALL
             ));
-        return new AbundanceReallocator(grids, getPeriod(), binToAgeGroupMappings);
+        return new AbundanceReallocator(grids, getPeriod(), binToSizeGroupMappings);
     }
 }

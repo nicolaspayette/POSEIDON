@@ -21,8 +21,11 @@ package uk.ac.ox.oxfish.biology.initializer.allocator;
 import java.nio.file.Path;
 import uk.ac.ox.oxfish.geography.MapExtent;
 import uk.ac.ox.oxfish.model.FishState;
+import uk.ac.ox.oxfish.utility.AlgorithmFactory;
 
-public class BiomassReallocatorFactory extends ReallocatorFactory<BiomassReallocator> {
+public class BiomassReallocatorFactory
+    extends ReallocatorFactory
+    implements AlgorithmFactory<BiomassReallocator> {
 
     public BiomassReallocatorFactory() {
     }

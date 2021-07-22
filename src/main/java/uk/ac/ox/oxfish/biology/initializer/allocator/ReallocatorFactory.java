@@ -19,9 +19,8 @@
 package uk.ac.ox.oxfish.biology.initializer.allocator;
 
 import java.nio.file.Path;
-import uk.ac.ox.oxfish.utility.AlgorithmFactory;
 
-abstract class ReallocatorFactory<T extends Reallocator<?>> implements AlgorithmFactory<T> {
+abstract class ReallocatorFactory {
 
     private Path speciesCodesFilePath;
     private Path biomassDistributionsFilePath;

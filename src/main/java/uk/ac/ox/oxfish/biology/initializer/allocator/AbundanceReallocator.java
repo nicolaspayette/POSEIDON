@@ -32,57 +32,77 @@ import sim.field.grid.DoubleGrid2D;
 import uk.ac.ox.oxfish.biology.GlobalBiology;
 import uk.ac.ox.oxfish.biology.Species;
 import uk.ac.ox.oxfish.biology.complicated.AbundanceLocalBiology;
-import uk.ac.ox.oxfish.biology.initializer.allocator.JuvenileMatureAllocationGridsSupplier.AgeGroup;
+import uk.ac.ox.oxfish.biology.initializer.allocator.SmallLargeAllocationGridsSupplier.SizeGroup;
 import uk.ac.ox.oxfish.geography.NauticalMap;
 import uk.ac.ox.oxfish.geography.SeaTile;
 
 /**
  *
  */
-public class AbundanceReallocator extends Reallocator<Entry<String, AgeGroup>> {
+public class AbundanceReallocator extends Reallocator<Entry<String, SizeGroup>> {
 
 
-    private final Map<String, ? extends IntFunction<AgeGroup>> binToAgeGroupMappings;
+    private final Map<String, ? extends IntFunction<SizeGroup>> binToSizeGroupMappings;
 
     /**
      * Constructs a new AbundanceReallocator.
      *
-     * @param allocationGrids       The distribution grids used to reallocate biomass
-     * @param period                The number to use as modulo for looping the schedule (usually
-     *                              365)
-     * @param binToAgeGroupMappings A map from species names to a function giving us the age group
-     *                              (juvenile or adult) for each age bin
+     * @param allocationGrids        The distribution grids used to reallocate biomass
+     * @param period                 The number to use as modulo for looping the schedule (usually
+     *                               365)
+     * @param binToSizeGroupMappings A map from species names to a function giving us the size group
+     *                               (small or large) for each age bin
      */
-    public AbundanceReallocator(
-        final AllocationGrids<Entry<String, AgeGroup>> allocationGrids,
+    AbundanceReallocator(
+        final AllocationGrids<Entry<String, SizeGroup>> allocationGrids,
         final int period,
-        final Map<String, ? extends IntFunction<AgeGroup>> binToAgeGroupMappings
+        final Map<String, ? extends IntFunction<SizeGroup>> binToSizeGroupMappings
     ) {
         super(allocationGrids, period);
-        this.binToAgeGroupMappings = ImmutableMap.copyOf(binToAgeGroupMappings);
+        this.binToSizeGroupMappings = ImmutableMap.copyOf(binToSizeGroupMappings);
     }
 
     @Override
     void performReallocation(
         final GlobalBiology globalBiology,
         final NauticalMap nauticalMap,
-        final Map<Entry<String, AgeGroup>, ? extends DoubleGrid2D> grids
+        final Map<Entry<String, SizeGroup>, ? extends DoubleGrid2D> grids
     ) {
         final Map<SeaTile, AbundanceLocalBiology> seaTileBiologies =
             getSeaTileBiologies(nauticalMap);
+        final Map<Species, double[][]> aggregatedAbundanceBefore =
+            aggregateAbundance(globalBiology, seaTileBiologies);
+        performReallocation(
+            grids,
+            seaTileBiologies,
+            aggregatedAbundanceBefore
+        );
+        final Map<Species, double[][]> aggregatedAbundanceAfter =
+            aggregateAbundance(globalBiology, seaTileBiologies);
+        System.out.println(aggregatedAbundanceBefore);
+        System.out.println(aggregatedAbundanceAfter);
+    }
 
-        aggregateBiomass(globalBiology, seaTileBiologies).forEach((species, globalAbundance) ->
+    private void performReallocation(
+        final Map<Entry<String, SizeGroup>, ? extends DoubleGrid2D> grids,
+        final Map<? extends SeaTile, ? extends AbundanceLocalBiology> seaTileBiologies,
+        final Map<? extends Species, double[][]> aggregatedAbundance
+    ) {
+        aggregatedAbundance.forEach((species, globalAbundance) ->
             range(0, globalAbundance.length).forEach(subdivision ->
                 range(0, globalAbundance[subdivision].length).forEach(bin -> {
                     final DoubleGrid2D grid = grids.get(entry(
                         species.getName(),
-                        binToAgeGroupMappings.get(species.getName()).apply(bin)
+                        binToSizeGroupMappings.get(species.getName()).apply(bin)
                     ));
+                    System.out.println(seaTileBiologies.keySet()
+                        .stream()
+                        .mapToDouble(tile -> grid.get(tile.getGridX(), tile.getGridY()))
+                        .sum());
                     seaTileBiologies.forEach((seaTile, biology) ->
                         biology.getAbundance(species).asMatrix()[subdivision][bin] =
                             globalAbundance[subdivision][bin]
-                                * grid.get(seaTile.getGridX(), seaTile.getGridY())
-                    );
+                                * grid.get(seaTile.getGridX(), seaTile.getGridY()));
                 })
             )
         );
@@ -100,7 +120,7 @@ public class AbundanceReallocator extends Reallocator<Entry<String, AgeGroup>> {
             ));
     }
 
-    private static Map<Species, double[][]> aggregateBiomass(
+    private static Map<Species, double[][]> aggregateAbundance(
         final GlobalBiology globalBiology,
         final Map<SeaTile, ? extends AbundanceLocalBiology> seaTileBiologies
     ) {
@@ -125,6 +145,24 @@ public class AbundanceReallocator extends Reallocator<Entry<String, AgeGroup>> {
             )
         );
         return abundances;
+    }
+
+    public void reallocateAtStep(
+        final int step,
+        final Map<? extends Species, double[][]> aggregatedAbundance,
+        final NauticalMap nauticalMap
+    ) {
+
+        final Map<Entry<String, SizeGroup>, DoubleGrid2D> grids = allocationGrids
+            .atOrBeforeStep(step % period)
+            .orElseThrow(() -> new IllegalStateException("Grids not found for step: " + step));
+
+        performReallocation(
+            grids,
+            getSeaTileBiologies(nauticalMap),
+            aggregatedAbundance
+        );
+
     }
 
 }
